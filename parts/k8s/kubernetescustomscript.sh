@@ -201,9 +201,6 @@ function configAzureCNI() {
     AZURE_CNI_TGZ_TMP=/tmp/azure_cni.tgz
     retrycmd_get_tarball 60 1 $AZURE_CNI_TGZ_TMP ${VNET_CNI_PLUGINS_URL}
     tar -xzf $AZURE_CNI_TGZ_TMP -C $CNI_BIN_DIR
-    CONTAINERNETWORKING_CNI_TGZ_TMP=/tmp/containernetworking_cni.tgz
-    retrycmd_get_tarball 60 1 $CONTAINERNETWORKING_CNI_TGZ_TMP ${CNI_PLUGINS_URL}
-    tar -xzf $CONTAINERNETWORKING_CNI_TGZ_TMP -C $CNI_BIN_DIR ./loopback ./portmap
     chown -R root:root $CNI_BIN_DIR
     chmod -R 755 $CNI_BIN_DIR
     mv $CNI_BIN_DIR/10-azure.conflist $CNI_CONFIG_DIR/
@@ -221,11 +218,29 @@ function configKubenet() {
     chmod -R 755 $CNI_BIN_DIR
 }
 
+function installCNI() {
+    CNI_BIN_DIR=/opt/cni/bin
+    mkdir -p $CNI_BIN_DIR
+    CONTAINERNETWORKING_CNI_TGZ_TMP=/tmp/containernetworking_cni.tgz
+    retrycmd_get_tarball 60 1 $CONTAINERNETWORKING_CNI_TGZ_TMP ${CNI_PLUGINS_URL}
+    tar -xzf $CONTAINERNETWORKING_CNI_TGZ_TMP -C $CNI_BIN_DIR
+    chown -R root:root $CNI_BIN_DIR
+    chmod -R 755 $CNI_BIN_DIR
+}
+
+function configCNINetworkPolicy() {
+    installCNI
+    setNetworkPlugin cni
+    setDockerOpts " --volume=/etc/cni/:/etc/cni:ro --volume=/opt/cni/:/opt/cni:ro"
+}
+
 function configNetworkPolicy() {
     if [[ "${NETWORK_POLICY}" = "azure" ]]; then
         configAzureCNI
     elif [[ "${NETWORK_POLICY}" = "none" ]] ; then
         configKubenet
+    elif [[ "${NETWORK_POLICY}" = "flannel" ]] ; then
+        configCNINetworkPolicy
     fi
 }
 

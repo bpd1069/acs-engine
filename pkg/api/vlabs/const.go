@@ -70,7 +70,7 @@ const (
 
 var (
 	// NetworkPolicyValues holds the valid values for a network policy
-	NetworkPolicyValues = [...]string{"", "none", "azure", "calico", "cilium"}
+	NetworkPolicyValues = [...]string{"", "none", "azure", "calico", "cilium", "flannel"}
 
 	// ContainerRuntimeValues holds the valid values for container runtimes
 	ContainerRuntimeValues = [...]string{"", "docker", "clear-containers"}
